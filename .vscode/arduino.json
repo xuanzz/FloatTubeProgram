@@ -1,0 +1,6 @@
+{
+    "port": "COM11",
+    "board": "arduino:avr:leonardo",
+    "output": "../build",
+    "sketch": "FloatTubeProgram.ino"
+}
