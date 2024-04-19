@@ -3,10 +3,10 @@
 #include <ONE-Shield.h>
 
 MS5837 sensor;
-Motor engine(2); // buoyancy engine
-int state = 0;   // 0 = idle, 1 = 1st diving, 2 = 1st rising, 3 = 1st idle, 4 = 2nd diving, 5 = 2nd risingg, 6 = 2nd idle
+Motor engine(2);     // buoyancy engine
+int state = 0;       // 0 = idle, 1 = 1st diving, 2 = 1st rising, 3 = 1st idle, 4 = 2nd diving, 5 = 2nd risingg, 6 = 2nd idle
 float startTime = 0; // float start time
-String teamNumber="R01";
+String teamNumber = "R01";
 int pressureSet1[100];
 int pressureSet2[100];
 int previousPressure = 0;
@@ -64,10 +64,10 @@ void readSerialCommand()
     case 'a': // 1st data request
       sendData(1);
       break;
-    case 'd': //manual dive
+    case 'd': // manual dive
       dive();
       break;
-    case 'r': //manual rise
+    case 'r': // manual rise
       rise();
       break;
     default:
@@ -76,7 +76,8 @@ void readSerialCommand()
   }
 }
 
-void updateStatus(){
+void updateStatus()
+{
   switch (state)
   {
   case 0:
@@ -108,14 +109,13 @@ void updateStatus(){
   default:
     break;
   }
-
 }
 
 void updateSensor()
 {
   // Update pressure and temperature readings
   sensor.read();
-  Serial1.print(round(((millis()-startTime)/1000)));
+  Serial1.print(round(((millis() - startTime) / 1000)));
   Serial1.print("\t");
   Serial1.print(round(sensor.pressure(100)));
   Serial1.print("kpa\t");
@@ -136,56 +136,55 @@ void profile()
     state = 1;
     if (state == 1)
     {
+      for (int i = 0; i < cycle; i++)
       {
         updateSensor();
-        for (int i = 0; i < cycle; i++)
+        pressureSet1[i] = sensor.pressure(100);
+        if (i == cycle / 2 - 1)
         {
-          pressureSet1[i] = sensor.pressure(100);
-          if (i == cycle/2 - 1)
-          {
-            rise();
-            state = 2;
-          }
-        delay(5000);
+          rise();
+          state = 2;
         }
-        state = 3;
+        delay(500);
       }
+      state = 3;
     }
+  }
   else if (state == 3)
+  {
+    Serial1.println("Profile2...");
+    state = 4;
+    dive();
+    if (state == 4)
     {
-      Serial1.println("Profile2...");
-      state = 4;
-      dive();
-      if (state == 4)
+      for (int i = 0; i < cycle; i++)
       {
         updateSensor();
-        for (int i = 0; i < cycle; i++)
+        pressureSet2[i] = sensor.pressure(100);
+        if (i == cycle / 2 - 1)
         {
-          pressureSet2[i] = sensor.pressure(100);
-          if (i == cycle/2 - 1)
-          {
-            rise();
-            state = 5;
-          }
+          rise();
+          state = 5;
         }
-        state = 6;
+        delay(500);
       }
+      state = 6;
     }
   }
 }
 
 void dive()
-  {
-    Serial1.println("Diving...");
-    engine.turn(-255);
-    delay(10000);
-    engine.off();
-  }
+{
+  Serial1.println("Diving...");
+  engine.turn(-255);
+  delay(10000);
+  engine.off();
+}
 
 void rise()
-  {
-    Serial1.println("Rising...");
-    engine.turn(255);
-    delay(10500);
-    engine.off();
-  }
+{
+  Serial1.println("Rising...");
+  engine.turn(255);
+  delay(10500);
+  engine.off();
+}
