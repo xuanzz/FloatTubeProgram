@@ -131,6 +131,7 @@ void profile()
   Serial1.println("Profile...");
   if (state == 0)
   {
+    Serial1.println("Profile1...");
     dive();
     state = 1;
     if (state == 1)
@@ -145,12 +146,14 @@ void profile()
             rise();
             state = 2;
           }
+        delay(5000);
         }
         state = 3;
       }
     }
   else if (state == 3)
     {
+      Serial1.println("Profile2...");
       state = 4;
       dive();
       if (state == 4)
