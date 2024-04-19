@@ -9,6 +9,9 @@ float startTime = 0; // float start time
 String teamNumber="R01";
 int pressureSet1[100];
 int pressureSet2[100];
+int previousPressure = 0;
+int PressureDifference = 0;
+int cycle = 28;
 
 void setup()
 {
@@ -126,28 +129,60 @@ void updateSensor()
 void profile()
 {
   Serial1.println("Profile...");
-  dive();
-  for (int i = 0; i < 100; i++)
+  if (state == 0)
   {
-    updateSensor();
-    pressureSet1[i] = sensor.pressure(100);
+    dive();
+    state = 1;
+    if (state == 1)
+    {
+      {
+        updateSensor();
+        for (int i = 0; i < cycle; i++)
+        {
+          pressureSet1[i] = sensor.pressure(100);
+          if (i == cycle/2 - 1)
+          {
+            rise();
+            state = 2;
+          }
+        }
+        state = 3;
+      }
+    }
+  else if (state == 3)
+    {
+      state = 4;
+      dive();
+      if (state == 4)
+      {
+        updateSensor();
+        for (int i = 0; i < cycle; i++)
+        {
+          pressureSet2[i] = sensor.pressure(100);
+          if (i == cycle/2 - 1)
+          {
+            rise();
+            state = 5;
+          }
+        }
+        state = 6;
+      }
+    }
   }
-  delay(50);
-  rise();
 }
 
 void dive()
-{
-  Serial1.println("Diving...");
-  engine.turn(-255);
-  delay(10000);
-  engine.off();
-}
+  {
+    Serial1.println("Diving...");
+    engine.turn(-255);
+    delay(10000);
+    engine.off();
+  }
 
 void rise()
-{
-  Serial1.println("Rising...");
-  engine.turn(255);
-  delay(10500);
-  engine.off();
-}
+  {
+    Serial1.println("Rising...");
+    engine.turn(255);
+    delay(10500);
+    engine.off();
+  }
