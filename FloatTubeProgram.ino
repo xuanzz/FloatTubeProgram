@@ -9,6 +9,8 @@ float startTime = 0; // float start time
 String teamNumber = "R01";
 int pressureSet1[100];
 int pressureSet2[100];
+float depthSet1[100];
+float depthSet2[100];
 int previousPressure = 0;
 int PressureDifference = 0;
 int cycle = 28;
@@ -36,15 +38,15 @@ void loop()
 void sendData(int dataSet)
 {
   Serial1.println("Sending data" + (String)dataSet + "...");
-  for (int i = 0; i < 100; i++)
+  for (int i = 0; i < cycle; i++)
   {
     if (dataSet == 1)
     {
-      Serial1.print(pressureSet1[i]);
+      Serial1.println(teamNumber + "\t" + i*5 + "s\t" + pressureSet1[i] + "kpa\t" + depthSet1[i] + "meters");
     }
-    else
+    else if (dataSet == 2)
     {
-      Serial1.print(pressureSet2[i]);
+      Serial1.println(teamNumber + "\t" + i*5 + "s\t" + pressureSet2[i] + "kpa\t" + depthSet2[i] + "meters");
     }
     Serial1.print("\t");
   }
@@ -64,11 +66,18 @@ void readSerialCommand()
     case 'a': // 1st data request
       sendData(1);
       break;
+    case 'b': // 2nd data request
+    sendData(2);
+    break;
     case 'd': // manual dive
       dive();
+      delay(8000);
+      stop();
       break;
     case 'r': // manual rise
       rise();
+      delay(10000);
+      stop();
       break;
     default:
       break;
@@ -115,15 +124,14 @@ void updateSensor()
 {
   // Update pressure and temperature readings
   sensor.read();
+  Serial1.print(teamNumber + "\t");
   Serial1.print(round(((millis() - startTime) / 1000)));
   Serial1.print("\t");
   Serial1.print(round(sensor.pressure(100)));
   Serial1.print("kpa\t");
 
-  Serial1.print(sensor.depth());
+  Serial1.print(sensor.depth() + 0.42);
   Serial1.println("meters");
-
-  delay(1000);
 }
 
 void profile()
@@ -132,20 +140,24 @@ void profile()
   if (state == 0)
   {
     Serial1.println("Profile1...");
-    dive();
     state = 1;
     if (state == 1)
     {
+      dive();
       for (int i = 0; i < cycle; i++)
       {
         updateSensor();
         pressureSet1[i] = sensor.pressure(100);
+        depthSet1[i] = sensor.depth() + 0.42;
+        if (i == 2 || i == cycle / 2 + 1)
+        stop(); //stop the engine at 10s
         if (i == cycle / 2 - 1)
         {
           rise();
           state = 2;
         }
-        delay(500);
+        delay(5000);
+
       }
       state = 3;
     }
@@ -154,19 +166,22 @@ void profile()
   {
     Serial1.println("Profile2...");
     state = 4;
-    dive();
     if (state == 4)
     {
+      dive();
       for (int i = 0; i < cycle; i++)
       {
         updateSensor();
         pressureSet2[i] = sensor.pressure(100);
+        depthSet2[i] = sensor.depth() + 0.42;
+        if (i == 2 || i == cycle / 2 + 1)
+        stop(); //stop the engine at 10s
         if (i == cycle / 2 - 1)
         {
           rise();
           state = 5;
         }
-        delay(500);
+        delay(5000);
       }
       state = 6;
     }
@@ -177,14 +192,20 @@ void dive()
 {
   Serial1.println("Diving...");
   engine.turn(-255);
-  delay(10000);
-  engine.off();
+//  delay(10000);
+//  engine.off();
 }
 
 void rise()
 {
   Serial1.println("Rising...");
   engine.turn(255);
-  delay(10500);
+  // delay(10500);
+  // engine.off();
+}
+
+void stop()
+{
+  Serial1.println("Engine Stopped");
   engine.off();
 }
