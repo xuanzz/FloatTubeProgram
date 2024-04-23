@@ -67,8 +67,8 @@ void readSerialCommand()
       sendData(1);
       break;
     case 'b': // 2nd data request
-    sendData(2);
-    break;
+      sendData(2);
+      break;
     case 'd': // manual dive
       dive();
       delay(8000);
@@ -79,6 +79,9 @@ void readSerialCommand()
       delay(10000);
       stop();
       break;
+    case 's': // stop for emergency
+      stop();
+      state = 0;
     default:
       break;
     }
@@ -101,7 +104,7 @@ void updateStatus()
     break;
   case 3:
     // 1st idle
-    Serial1.println(teamNumber + "1st Dive Completed! Send 'a' to request the 1st data...");
+    Serial1.println(teamNumber + " 1st Dive Completed! Send 'a' to request the 1st data...");
     delay(3000);
     break;
   case 4:
@@ -112,7 +115,7 @@ void updateStatus()
     break;
   case 6:
     // 2nd idle
-    Serial1.println(teamNumber + "2st Dive Completed! Send 'b' to request the 2st data...");
+    Serial1.println(teamNumber + " 2st Dive Completed! Send 'b' to request the 2st data...");
     delay(3000);
     break;
   default:
