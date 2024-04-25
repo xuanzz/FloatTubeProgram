@@ -130,10 +130,10 @@ void updateSensor()
   Serial1.print(teamNumber + "\t");
   Serial1.print(round(((millis() - startTime) / 1000)));
   Serial1.print("\t");
-  Serial1.print(round(sensor.pressure(100)));
+  Serial1.print(round(sensor.pressure(0.1)));
   Serial1.print("kpa\t");
 
-  Serial1.print(sensor.depth() + 0.42);
+  Serial1.print(sensor.depth());
   Serial1.println("meters");
 }
 
@@ -150,9 +150,9 @@ void profile()
       for (int i = 0; i < cycle; i++)
       {
         updateSensor();
-        pressureSet1[i] = sensor.pressure(100);
+        pressureSet1[i] = sensor.pressure(0.1);
         depthSet1[i] = sensor.depth() + 0.42;
-        if (i == 2 || i == cycle / 2 + 1)
+        if (i == 4 || i == cycle / 2 + 3)
         stop(); //stop the engine at 10s
         if (i == cycle / 2 - 1)
         {
@@ -175,9 +175,9 @@ void profile()
       for (int i = 0; i < cycle; i++)
       {
         updateSensor();
-        pressureSet2[i] = sensor.pressure(100);
+        pressureSet2[i] = sensor.pressure(0.1);
         depthSet2[i] = sensor.depth() + 0.42;
-        if (i == 2 || i == cycle / 2 + 1)
+        if (i == 4 || i == cycle / 2 + 3)
         stop(); //stop the engine at 10s
         if (i == cycle / 2 - 1)
         {
