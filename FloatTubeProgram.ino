@@ -21,12 +21,12 @@ CRGB leds[NUM_LEDS]; // array of LEDs
 
 void setup()
 {
-  Serial1.begin(9600);
+  Serial.begin(9600);
   Wire.begin();
   engine.off();
   while (!sensor.init())
   {
-    Serial1.println("Init failed!");
+    Serial.println("Init failed!");
     delay(3000);
   }
   sensor.setModel(MS5837::MS5837_30BA);
@@ -60,29 +60,29 @@ void loop()
 
 void sendData(int dataSet)
 {
-  Serial1.println("Sending data" + (String)dataSet + "...");
+  Serial.println("Sending data" + (String)dataSet + "...");
   for (int i = 0; i < cycle; i++)
   {
     if (dataSet == 1)
     {
-      Serial1.println(teamNumber + "\t" + i * 5 + "s\t" + pressureSet1[i] + "kpa\t" + depthSet1[i] + "meters");
+      Serial.println(teamNumber + "\t" + i * 5 + "s\t" + pressureSet1[i] + "kpa\t" + depthSet1[i] + "meters");
     }
     else if (dataSet == 2)
     {
-      Serial1.println(teamNumber + "\t" + i * 5 + "s\t" + pressureSet2[i] + "kpa\t" + depthSet2[i] + "meters");
+      Serial.println(teamNumber + "\t" + i * 5 + "s\t" + pressureSet2[i] + "kpa\t" + depthSet2[i] + "meters");
     }
-    Serial1.print("\t");
+    Serial.print("\t");
   }
-  Serial1.println();
+  Serial.println();
 }
 
 
 
 void readSerialCommand()
 {
-  if (Serial1.available() > 0)
+  if (Serial.available() > 0)
   {
-    char command = Serial1.read();
+    char command = Serial.read();
     switch (command)
     {
     case 'p': // dive
@@ -118,7 +118,7 @@ void updateStatus()
   switch (state)
   {
   case 0:
-    Serial1.println(teamNumber + "\tReady to dive...");
+    Serial.println(teamNumber + "\tReady to dive...");
     delay(3000);
     break;
   case 1:
@@ -133,7 +133,7 @@ void updateStatus()
     leds[2] = CRGB::Yellow;
     FastLED.show();
     // 1st idle
-    Serial1.println(teamNumber + " 1st Dive Completed! Send 'a' to request the 1st data...");
+    Serial.println(teamNumber + " 1st Dive Completed! Send 'a' to request the 1st data...");
     delay(3000);
     break;
   case 4:
@@ -148,7 +148,7 @@ void updateStatus()
     leds[1] = CRGB::Yellow;
     leds[2] = CRGB::Yellow;
     FastLED.show();
-    Serial1.println(teamNumber + " 2st Dive Completed! Send 'b' to request the 2st data...");
+    Serial.println(teamNumber + " 2st Dive Completed! Send 'b' to request the 2st data...");
     delay(3000);
     break;
   default:
@@ -160,22 +160,22 @@ void updateSensor()
 {
   // Update pressure and temperature readings
   sensor.read();
-  Serial1.print(teamNumber + "\t");
-  Serial1.print(round(((millis() - startTime) / 1000)));
-  Serial1.print("\t");
-  Serial1.print(round(sensor.pressure(0.1)));
-  Serial1.print("kpa\t");
+  Serial.print(teamNumber + "\t");
+  Serial.print(round(((millis() - startTime) / 1000)));
+  Serial.print("\t");
+  Serial.print(round(sensor.pressure(0.1)));
+  Serial.print("kpa\t");
 
-  Serial1.print(sensor.depth());
-  Serial1.println("meters");
+  Serial.print(sensor.depth());
+  Serial.println("meters");
 }
 
 void profile()
 {
-  Serial1.println("Profile...");
+  Serial.println("Profile...");
   if (state == 0)
   {
-    Serial1.println("Profile1...");
+    Serial.println("Profile1...");
     state = 1;
     if (state == 1)
     {
@@ -199,7 +199,7 @@ void profile()
   }
   else if (state == 3)
   {
-    Serial1.println("Profile2...");
+    Serial.println("Profile2...");
     state = 4;
     if (state == 4)
     {
@@ -225,7 +225,7 @@ void profile()
 
 void dive()
 {
-  Serial1.println("Diving...");
+  Serial.println("Diving...");
   engine.turn(-255);
   leds[0] = CRGB::Red;
   leds[1] = CRGB::Red;
@@ -237,7 +237,7 @@ void dive()
 
 void rise()
 {
-  Serial1.println("Rising...");
+  Serial.println("Rising...");
   engine.turn(255);
   leds[0] = CRGB::Green;
   leds[1] = CRGB::Green;
@@ -249,6 +249,6 @@ void rise()
 
 void stop()
 {
-  Serial1.println("Engine Stopped");
+  Serial.println("Engine Stopped");
   engine.off();
 }
