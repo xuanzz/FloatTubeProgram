@@ -7,6 +7,7 @@ MS5837 sensor;
 Motor engine(2);     // buoyancy engine
 int state = 0;       // 0 = idle, 1 = 1st diving, 2 = 1st rising, 3 = 1st idle, 4 = 2nd diving, 5 = 2nd risingg, 6 = 2nd idle
 float startTime = 0; // float start time
+float time = 0;
 String teamNumber = "R9";
 int pressureSet1[100];
 int pressureSet2[100];
@@ -58,18 +59,108 @@ void loop()
   delay(500);
 }
 
+void dive()
+{
+  Serial.println("Diving...");
+  engine.turn(-255);
+  leds[0] = CRGB::Red;
+  leds[1] = CRGB::Red;
+  leds[2] = CRGB::Red;
+  FastLED.show();
+  //  delay(10000);
+  //  engine.off();
+}
+
+void rise()
+{
+  Serial.println("Rising...");
+  engine.turn(255);
+  leds[0] = CRGB::Green;
+  leds[1] = CRGB::Green;
+  leds[2] = CRGB::Green;
+  FastLED.show();
+}
+
+void stop()//function for stopping
+{
+  Serial.println("Engine Stopped");
+  engine.off();
+}
+
+void profile()
+{
+  Serial.println("Profile...");
+  if (state == 0)
+  {
+   Serial.println("Profile1...");
+   float startTime = millis();
+   state = 1;
+  }
+  if (state == 1)
+  {  
+    for(int i = (millis() - startTime)/1000; state < 3; i = (millis() - startTime)/1000)
+    {
+      {
+       dive();
+       updateSensor();
+       pressureSet1[i] = sensor.pressure(0.1);
+       depthSet1[i] = sensor.depth() + 0.42;
+       if (pressureSet1[i] = pressureSet1[i-1])//stop engine when reaches the botton
+       {
+       stop();
+       state = 2;
+       delay(45000);
+       rise();
+       }
+       if (sensor.depth() + 0.42 == 0)//stop engine when it reaches the water surface
+       {
+         stop();
+         state = 3;     
+         delay(3000);
+       }    
+      }
+    }
+  }
+  else if (state == 3)
+  {
+    Serial.println("Profile2...");
+    float startTime = millis();
+    state = 4;
+  }
+  if (state == 4)
+  {
+    for(int i = (millis() - startTime)/1000; state < 6; i = (millis() - startTime)/1000)
+    {
+      dive();
+      updateSensor();
+      pressureSet2[i] = sensor.pressure(0.1);
+      depthSet2[i] = sensor.depth() + 0.42;
+      if (pressureSet2[i] = pressureSet2[i-1])
+      {  
+      stop(); 
+      delay(45000);//stop engine for 45s
+      rise();
+      if (sensor.depth() + 0.42 == 0)//stop engine when it reaches the water surface, which pressure is same as start
+      stop();
+      state = 6;
+      }  
+    }
+  } 
+}
+
+
 void sendData(int dataSet)
 {
   Serial.println("Sending data" + (String)dataSet + "...");
-  for (int i = 0; i < cycle; i++)
+  for (int i = (millis() - startTime)/1000; state < 6; i = (millis() - startTime)/1000)
   {
     if (dataSet == 1)
     {
-      Serial.println(teamNumber + "\t" + i * 5 + "s\t" + pressureSet1[i] + "kpa\t" + depthSet1[i] + "meters");
+      Serial.println(teamNumber + "\t" + i + "s\t" + pressureSet1[i] + "kpa\t" + depthSet1[i] + "m");
     }
     else if (dataSet == 2)
     {
-      Serial.println(teamNumber + "\t" + i * 5 + "s\t" + pressureSet2[i] + "kpa\t" + depthSet2[i] + "meters");
+      Serial.println(teamNumber + "\t" + i + "s\t" + pressureSet2[i] + "kpa\t" + depthSet2[i] + "meters");
     }
     Serial.print("\t");
   }
@@ -96,7 +187,7 @@ void readSerialCommand()
       break;
     case 'd': // manual dive
       dive();
-      delay(8000);
+      delay(8000); 
       stop();
       break;
     case 'r': // manual rise
@@ -119,13 +210,11 @@ void updateStatus()
   {
   case 0:
     Serial.println(teamNumber + "\tReady to dive...");
-    delay(3000);
     break;
   case 1:
     // 1st diving
     break;
   case 2:
-    // 1st rising
     break;
   case 3:
     leds[0] = CRGB::Yellow;
@@ -133,7 +222,7 @@ void updateStatus()
     leds[2] = CRGB::Yellow;
     FastLED.show();
     // 1st idle
-    Serial.println(teamNumber + " 1st Dive Completed! Send 'a' to request the 1st data...");
+    Serial.println(teamNumber + " 1st Dive Completed! Send 'a' to request the 1st data. Or data will be reseted...");
     delay(3000);
     break;
   case 4:
@@ -168,87 +257,4 @@ void updateSensor()
 
   Serial.print(sensor.depth());
   Serial.println("meters");
-}
-
-void profile()
-{
-  Serial.println("Profile...");
-  if (state == 0)
-  {
-    Serial.println("Profile1...");
-    state = 1;
-    if (state == 1)
-    {
-      dive();
-      for (int i = 0; i < cycle; i++)
-      {
-        updateSensor();
-        pressureSet1[i] = sensor.pressure(0.1);
-        depthSet1[i] = sensor.depth() + 0.42;
-        if (i == 4 || i == cycle / 2 + 3)
-          stop(); // stop the engine at 10s
-        if (i == cycle / 2 - 1)
-        {
-          rise();
-          state = 2;
-        }
-        delay(5000);
-      }
-      state = 3;
-    }
-  }
-  else if (state == 3)
-  {
-    Serial.println("Profile2...");
-    state = 4;
-    if (state == 4)
-    {
-      dive();
-      for (int i = 0; i < cycle; i++)
-      {
-        updateSensor();
-        pressureSet2[i] = sensor.pressure(0.1);
-        depthSet2[i] = sensor.depth() + 0.42;
-        if (i == 4 || i == cycle / 2 + 3)
-          stop(); // stop the engine at 10s
-        if (i == cycle / 2 - 1)
-        {
-          rise();
-          state = 5;
-        }
-        delay(5000);
-      }
-      state = 6;
-    }
-  }
-}
-
-void dive()
-{
-  Serial.println("Diving...");
-  engine.turn(-255);
-  leds[0] = CRGB::Red;
-  leds[1] = CRGB::Red;
-  leds[2] = CRGB::Red;
-  FastLED.show();
-  //  delay(10000);
-  //  engine.off();
-}
-
-void rise()
-{
-  Serial.println("Rising...");
-  engine.turn(255);
-  leds[0] = CRGB::Green;
-  leds[1] = CRGB::Green;
-  leds[2] = CRGB::Green;
-  FastLED.show();
-  // delay(10500);
-  // engine.off();
-}
-
-void stop()
-{
-  Serial.println("Engine Stopped");
-  engine.off();
 }
