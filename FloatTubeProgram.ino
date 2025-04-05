@@ -6,8 +6,7 @@
 MS5837 sensor;
 Motor engine(2);     // buoyancy engine
 int state = 0;       // 0 = idle, 1 = 1st diving, 2 = 1st rising, 3 = 1st idle, 4 = 2nd diving, 5 = 2nd risingg, 6 = 2nd idle
-float startTime = 0; // float start time
-float time = 0;
+float startTime = 0; // float start time, profile time
 String teamNumber = "R9";
 int pressureSet1[100];
 int pressureSet2[100];
@@ -15,7 +14,6 @@ float depthSet1[100];
 float depthSet2[100];
 int previousPressure = 0;
 int PressureDifference = 0;
-int cycle = 28;
 #define NUM_LEDS 3 // number of LEDs
 #define DATA_PIN 21 //port
 CRGB leds[NUM_LEDS]; // array of LEDs
@@ -98,7 +96,7 @@ void profile()
   }
   if (state == 1)
   {  
-    for(int i = (millis() - startTime)/1000; state < 3; i = (millis() - startTime)/1000)
+    for(int i = (millis() - startTime)/1000; state < 3; i = (millis() - startTime)/1000)//i=time in second. i = profiling time before state 3 which reaches the surface
     {
       {
        dive();
@@ -112,7 +110,7 @@ void profile()
        delay(45000);
        rise();
        }
-       if (sensor.depth() + 0.42 == 0)//stop engine when it reaches the water surface
+       if ((sensor.depth() + 0.42) == 0)//stop engine when it reaches the water surface
        {
          stop();
          state = 3;     
@@ -152,7 +150,7 @@ void profile()
 void sendData(int dataSet)
 {
   Serial.println("Sending data" + (String)dataSet + "...");
-  for (int i = (millis() - startTime)/1000; state < 6; i = (millis() - startTime)/1000)
+  for (int i = (millis() - startTime)/1000; state < 6; i = (millis() - startTime)/1000)//i = time of profile of the moment in second
   {
     if (dataSet == 1)
     {
