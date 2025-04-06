@@ -109,13 +109,14 @@ void profile()
        state = 2;
        delay(45000);
        rise();
-       }
+       
        if ((sensor.depth() + 0.42) == 0)//stop engine when it reaches the water surface
        {
          stop();
          state = 3;     
          delay(3000);
        }    
+       }       
       }
     }
   }
@@ -139,8 +140,9 @@ void profile()
       delay(45000);//stop engine for 45s
       rise();
       if (sensor.depth() + 0.42 == 0)//stop engine when it reaches the water surface, which pressure is same as start
-      stop();
+      {stop();
       state = 6;
+      }
       }  
     }
   } 
