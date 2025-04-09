@@ -10,6 +10,8 @@ float startTime = 0; // float start time, profile time
 String teamNumber = "R9";
 int pressureSet1[100];
 int pressureSet2[100];
+int pressure = sensor.pressure(0.1);
+float depth = sensor.depth() + 0.42;
 float depthSet1[100];
 float depthSet2[100];
 int previousPressure = 0;
@@ -20,6 +22,7 @@ CRGB leds[NUM_LEDS]; // array of LEDs
 
 void setup()
 {
+  state = 0;
   Serial.begin(9600);
   Wire.begin();
   engine.off();
@@ -88,6 +91,9 @@ void stop()//function for stopping
 void profile()
 {
   Serial.println("Profile...");
+  updateStatus();
+  updateStatus();
+  state = 0;
   if (state == 0)
   {
    Serial.println("Profile1...");
@@ -101,25 +107,28 @@ void profile()
       {
        dive();
        updateSensor();
+       pressure = sensor.pressure(0.1);
+       depth = sensor.depth() + 0.42;
        pressureSet1[i] = sensor.pressure(0.1);
        depthSet1[i] = sensor.depth() + 0.42;
-       if (pressureSet1[i] = pressureSet1[i-1])//stop engine when reaches the botton
+       if (pressureSet1[i] == pressureSet1[i-1])
        {
-       stop();
-       state = 2;
-       delay(45000);
-       rise();
-       
-       if ((sensor.depth() + 0.42) == 0)//stop engine when it reaches the water surface
+        stop();
+        state = 2;
+       }
+       if (i=46)
        {
-         stop();
-         state = 3;     
-         delay(3000);
-       }    
-       }       
+        rise();
+       }
+       if (depthSet1[i] = 0)
+       {
+        stop();
+        state = 3;
+        delay(3000);
+       }
       }
-    }
-  }
+    }    
+  }   
   else if (state == 3)
   {
     Serial.println("Profile2...");
@@ -134,21 +143,24 @@ void profile()
       updateSensor();
       pressureSet2[i] = sensor.pressure(0.1);
       depthSet2[i] = sensor.depth() + 0.42;
-      if (pressureSet2[i] = pressureSet2[i-1])
-      {  
-      stop(); 
-      delay(45000);//stop engine for 45s
-      rise();
-      if (sensor.depth() + 0.42 == 0)//stop engine when it reaches the water surface, which pressure is same as start
-      {stop();
-      state = 6;
-      }
-      }  
+      if (pressureSet1[i] == pressureSet1[i-1])
+       {
+        stop();
+        state = 2;
+       }
+       if (i=46)
+       {
+        rise();
+       }
+       if (depthSet1[i] = 0)
+       {
+        stop();
+        state = 3;
+        delay(3000);
+       }
     }
   } 
-}
-
-
+}          
 void sendData(int dataSet)
 {
   Serial.println("Sending data" + (String)dataSet + "...");
@@ -160,7 +172,7 @@ void sendData(int dataSet)
     }
     else if (dataSet == 2)
     {
-      Serial.println(teamNumber + "\t" + i + "s\t" + pressureSet2[i] + "kpa\t" + depthSet2[i] + "meters");
+      Serial.println(teamNumber + "\t" + i + "s\t" + pressureSet2[i] + "kpa\t" + depthSet2[i] + "m");
     }
     Serial.print("\t");
   }
@@ -212,7 +224,6 @@ void updateStatus()
     Serial.println(teamNumber + "\tReady to dive...");
     break;
   case 1:
-    // 1st diving
     break;
   case 2:
     break;
@@ -257,4 +268,5 @@ void updateSensor()
 
   Serial.print(sensor.depth());
   Serial.println("meters");
+  delay(1000);
 }
