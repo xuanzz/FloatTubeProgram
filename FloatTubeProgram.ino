@@ -14,10 +14,13 @@ float depthSet1[100];
 float depthSet2[100];
 int previousPressure = 0;
 int PressureDifference = 0;
-int cycle = 28;
+int Time = 0;
 #define NUM_LEDS 3 // number of LEDs
 #define DATA_PIN 21 //port
 CRGB leds[NUM_LEDS]; // array of LEDs
+int lastsec = 0; //previous recorded time
+int pauseTime = 0;
+int i = 0;
 
 void setup()
 {
@@ -37,7 +40,9 @@ void setup()
   leds[1] = CRGB::Green;
   leds[2] = CRGB::Green;
   FastLED.show();
-  
+
+  Serial.print("enter teamNumber:");
+  teamNumber = Serial.read();
 }
 
 void loop()
@@ -61,15 +66,15 @@ void loop()
 void sendData(int dataSet)
 {
   Serial.println("Sending data" + (String)dataSet + "...");
-  for (int i = 0; i < cycle; i++)
+  for (int i = 0; i < Time ; i++)
   {
     if (dataSet == 1)
     {
-      Serial.println(teamNumber + "\t" + i * 5 + "s\t" + pressureSet1[i] + "kpa\t" + depthSet1[i] + "meters");
+      Serial.println(teamNumber + "\t" + i + "s\t" + pressureSet1[i] + "kpa\t" + depthSet1[i] + "meters");
     }
     else if (dataSet == 2)
     {
-      Serial.println(teamNumber + "\t" + i * 5 + "s\t" + pressureSet2[i] + "kpa\t" + depthSet2[i] + "meters");
+      Serial.println(teamNumber + "\t" + i + "s\t" + pressureSet2[i] + "kpa\t" + depthSet2[i] + "meters");
     }
     Serial.print("\t");
   }
@@ -90,6 +95,7 @@ void readSerialCommand()
       break;
     case 'a': // 1st data request
       sendData(1);
+      state = 4;
       break;
     case 'b': // 2nd data request
       sendData(2);
@@ -156,18 +162,16 @@ void updateStatus()
   }
 }
 
-void updateSensor()
+void updateSensor()// Update pressure and temperature readings
 {
-  // Update pressure and temperature readings
   sensor.read();
   Serial.print(teamNumber + "\t");
   Serial.print(round(((millis() - startTime) / 1000)));
   Serial.print("\t");
   Serial.print(round(sensor.pressure(0.1)));
   Serial.print("kpa\t");
-
   Serial.print(sensor.depth());
-  Serial.println("meters");
+  Serial.println("m");
 }
 
 void profile()
@@ -180,48 +184,76 @@ void profile()
     if (state == 1)
     {
       dive();
-      for (int i = 0; i < cycle; i++)
+      startTime = millis();
+      bool executed = false;
+      for (i = 0; state < 3; i = ((millis()-startTime)/1000))
       {
-        updateSensor();
-        pressureSet1[i] = sensor.pressure(0.1);
-        depthSet1[i] = sensor.depth() + 0.42;
-        if (i == 4 || i == cycle / 2 + 3)
-          stop(); // stop the engine at 10s
-        if (i == cycle / 2 - 1)
+        if (i == lastsec+1)
         {
-          rise();
-          state = 2;
+          updateSensor();
+          pressureSet1[i] = sensor.pressure(0.1);
+          depthSet1[i] = sensor.depth() + 0.42;
+          lastsec++; 
+          if (pressureSet1[i] >= pressureSet1[i-1]+0.25 || pressureSet1[i-1]-0.25)
+          {
+            if (!executed)
+            {
+            pauseTime = millis()/1000;
+            stop();
+            executed = true;
+            }
+            else if ((i - pauseTime) >= 46)
+            {
+              rise();
+              state = 2;
+              if (depthSet2[i] > 0.2)
+              Time = i;
+              state = 3;
+            }
+          }
         }
-        delay(5000);
       }
-      state = 3;
-    }
+    }  
   }
-  else if (state == 3)
+  else if (state == 4)
   {
     Serial.println("Profile2...");
-    state = 4;
-    if (state == 4)
+    dive();
+    startTime = millis();
+    int pauseTime = 0;
+    bool executed = false;
+    for (i = 0; state < 6; i = ((millis()-startTime)/1000))
     {
-      dive();
-      for (int i = 0; i < cycle; i++)
+      if (i == lastsec+1)
       {
         updateSensor();
         pressureSet2[i] = sensor.pressure(0.1);
         depthSet2[i] = sensor.depth() + 0.42;
-        if (i == 4 || i == cycle / 2 + 3)
-          stop(); // stop the engine at 10s
-        if (i == cycle / 2 - 1)
+        lastsec++;  
+        if (pressureSet1[i] >= pressureSet2[i-1]+0.25 || pressureSet2[i-1]-0.25)
         {
-          rise();
-          state = 5;
-        }
-        delay(5000);
-      }
-      state = 6;
+          if (!executed)
+          {
+          pauseTime = millis()/1000;
+          stop();
+          executed = true;
+          }
+          else if ((i - pauseTime) >= 46)
+          {
+            rise();
+            state = 5;
+            if (depthSet2[i] > 0.2)
+            Time = i;
+            state = 6;
+          }
+        }  
+      }  
     }
   }
 }
+
+
+
 
 void dive()
 {
@@ -231,8 +263,8 @@ void dive()
   leds[1] = CRGB::Red;
   leds[2] = CRGB::Red;
   FastLED.show();
-  //  delay(10000);
-  //  engine.off();
+  delay(10000);//  delay(10000);
+  engine.off();//  engine.off();
 }
 
 void rise()
@@ -243,8 +275,8 @@ void rise()
   leds[1] = CRGB::Green;
   leds[2] = CRGB::Green;
   FastLED.show();
-  // delay(10500);
-  // engine.off();
+  delay(10500);// delay(10500);
+  engine.off();// engine.off();
 }
 
 void stop()
