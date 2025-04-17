@@ -66,7 +66,7 @@ void loop()
 void sendData(int dataSet)
 {
   Serial.println("Sending data" + (String)dataSet + "...");
-  for (int i = 0; i < Time ; i++)
+  for (int i = 0; i < Time; i++)
   {
     if (dataSet == 1)
     {
@@ -99,6 +99,7 @@ void readSerialCommand()
       break;
     case 'b': // 2nd data request
       sendData(2);
+      state = 0;
       break;
     case 'd': // manual dive
       dive();
@@ -185,7 +186,8 @@ void profile()
     {
       dive();
       startTime = millis();
-      bool executed = false;
+      bool paused = false;
+      bool rised = false;
       for (i = 0; state < 3; i = ((millis()-startTime)/1000))
       {
         if (i == lastsec+1)
@@ -194,21 +196,25 @@ void profile()
           pressureSet1[i] = sensor.pressure(0.1);
           depthSet1[i] = sensor.depth() + 0.42;
           lastsec++; 
-          if (pressureSet1[i] >= pressureSet1[i-1]+0.25 || pressureSet1[i-1]-0.25)
+          if (pressureSet1[i] >= pressureSet1[i-1]+0.25)
           {
-            if (!executed)
+            if (!paused)
             {
             pauseTime = millis()/1000;
             stop();
-            executed = true;
+            paused = true;
             }
-            else if ((i - pauseTime) >= 46)
+            else if ((i - pauseTime) >= 46 && !rised)
             {
               rise();
+              rised = true;
               state = 2;
               if (depthSet2[i] > 0.2)
-              Time = i;
-              state = 3;
+              {
+                stop();
+                Time = i;
+                state = 3;
+              }
             }
           }
         }
@@ -221,7 +227,8 @@ void profile()
     dive();
     startTime = millis();
     int pauseTime = 0;
-    bool executed = false;
+    bool paused = false;
+    bool rised = false;
     for (i = 0; state < 6; i = ((millis()-startTime)/1000))
     {
       if (i == lastsec+1)
@@ -230,21 +237,25 @@ void profile()
         pressureSet2[i] = sensor.pressure(0.1);
         depthSet2[i] = sensor.depth() + 0.42;
         lastsec++;  
-        if (pressureSet1[i] >= pressureSet2[i-1]+0.25 || pressureSet2[i-1]-0.25)
+        if (pressureSet1[i] >= pressureSet2[i-1]+0.25)
         {
-          if (!executed)
+          if (!paused)
           {
           pauseTime = millis()/1000;
           stop();
-          executed = true;
+          paused = true;
           }
-          else if ((i - pauseTime) >= 46)
+          else if ((i - pauseTime) >= 46 && !rised)
           {
             rise();
+            rised = true;
             state = 5;
             if (depthSet2[i] > 0.2)
-            Time = i;
-            state = 6;
+            {
+              stop();
+              Time = i;
+              state = 6;
+            }
           }
         }  
       }  
