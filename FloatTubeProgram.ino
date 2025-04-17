@@ -66,7 +66,7 @@ void loop()
 void sendData(int dataSet)
 {
   Serial.println("Sending data" + (String)dataSet + "...");
-  for (int i = 0; i < Time; i++)
+  for (int i = 0; i < Time ; i++)
   {
     if (dataSet == 1)
     {
