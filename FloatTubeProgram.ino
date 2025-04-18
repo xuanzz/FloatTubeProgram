@@ -196,7 +196,7 @@ void profile()
           pressureSet1[i] = sensor.pressure(0.1);
           depthSet1[i] = sensor.depth() + 0.42;
           lastsec++; 
-          if (pressureSet1[i] >= pressureSet1[i-1]+0.25)
+          if (pressureSet1[i] >= pressureSet1[i-1]+0.1)
           {
             if (!paused)
             {
@@ -209,12 +209,12 @@ void profile()
               rise();
               rised = true;
               state = 2;
-              if (depthSet2[i] > 0.2)
-              {
-                stop();
-                Time = i;
-                state = 3;
-              }
+            }
+            else if (depthSet1[i] > 0.2 && rised)
+            {
+              stop();
+              Time = i;
+              state = 3;
             }
           }
         }
@@ -229,33 +229,32 @@ void profile()
     int pauseTime = 0;
     bool paused = false;
     bool rised = false;
-    for (i = 0; state < 6; i = ((millis()-startTime)/1000))
+    for (i = 0; i < Time; i = ((millis()-startTime)/1000))//i = time(second) in profiling.
     {
-      if (i == lastsec+1)
+      if (i == lastsec+1)//updateSensor and record data per second.
       {
         updateSensor();
         pressureSet2[i] = sensor.pressure(0.1);
         depthSet2[i] = sensor.depth() + 0.42;
         lastsec++;  
-        if (pressureSet1[i] >= pressureSet2[i-1]+0.25)
+        if (pressureSet1[i] >= pressureSet2[i-1]-0.1)//at the botton
         {
-          if (!paused)
+          if (!paused)//engine stopped at the bottob. Added bool 'paused' to prevent from looping
           {
           pauseTime = millis()/1000;
           stop();
           paused = true;
           }
-          else if ((i - pauseTime) >= 46 && !rised)
+          else if ((i - pauseTime) >= 46 && !rised)//rise after pausing for 45 seconds. Added bool 'rised' to prevent from looping.
           {
             rise();
             rised = true;
-            state = 5;
-            if (depthSet2[i] > 0.2)
-            {
-              stop();
-              Time = i;
-              state = 6;
-            }
+            state = 5; 
+          }
+          else if (i == Time)//engine stopped when i == recorded Time in the first time
+          {
+            stop();
+            state = 6;
           }
         }  
       }  
