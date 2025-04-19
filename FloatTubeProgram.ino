@@ -18,9 +18,8 @@ int Time = 0;
 #define NUM_LEDS 3 // number of LEDs
 #define DATA_PIN 21 //port
 CRGB leds[NUM_LEDS]; // array of LEDs
-int lastsec = 0; //previous recorded time
-int i = 0;
-int pauseTime = 0;
+int pauseTime;
+int riseTime;
 
 void setup()
 {
@@ -40,9 +39,6 @@ void setup()
   leds[1] = CRGB::Green;
   leds[2] = CRGB::Green;
   FastLED.show();
-
-  Serial.print("enter teamNumber:");
-  teamNumber = Serial.read();
 }
 
 void loop()
@@ -184,82 +180,93 @@ void profile()
     state = 1;
     if (state == 1)
     {
-      startTime = millis();
       dive();
+      startTime = millis();
       bool paused = false;
       bool rised = false;
-      for (i = 0; state < 3; i = ((millis()-startTime)/1000))
+      int lastsec = 0;
+      for (int i = 0; state < 3;)//record time in second with i
       {
+        i = ((millis()-startTime)/1000);//i = time(second) in profiling.
+      
         if (i == lastsec+1)
-        {
-          updateSensor();
+        { 
+          lastsec++;
           pressureSet1[i] = sensor.pressure(0.1);
           depthSet1[i] = sensor.depth() + 0.42;
-          lastsec++; 
-          if (pressureSet1[i] >= pressureSet1[i-1]+0.075)
+          updateSensor();
+          if (pressureSet1[i] >= pressureSet1[i-1])
           {
+            Serial.println(i - pauseTime);
             if (!paused)
             {
-            pauseTime = round(millis()/1000);
-            stop();
-            paused = true;
+              pauseTime = i;
+              stop();
+              paused = true;
+              Serial.println("paused:" + paused);
             }
-            else if ((i - pauseTime) >= 46 && !rised)
+            if ((i-pauseTime) >= 45 && !rised)
             {
+              riseTime = i;
               rise();
               rised = true;
               state = 2;
-            }
-            else if (depthSet1[i] > 0.2 && rised)
-            {
-              stop();
-              Time = i;
-              state = 3;
-            }
+              if (depthSet1[i] <= 0.42)
+              {
+                stop();
+                Serial.println("rised:" + rised);
+                Time = i;
+                state = 3;
+              }
+            } 
           }
         }
       }
     }  
   }
-  else if (state == 4)
+  if (state == 4)
   {
-    Serial.println("Profile2...");
-    startTime = millis();
     dive();
+    Serial.println("profile2...");
+    startTime = millis();
     bool paused = false;
     bool rised = false;
-    lastsec = 0;
-    for (i = 0; i < Time; i = ((millis()-startTime)/1000))//i = time(second) in profiling.
+    int lastsec = 0;
+    for (int i = 0; state < 6;)//record time in second with i
     {
-      if (i == lastsec+1)//updateSensor and record data per second.
-      {
-        updateSensor();
+      i = ((millis()-startTime)/1000);//i = time(second) in profiling.
+      if (i == lastsec+1)
+      { 
+        lastsec++;//lastsec+1
         pressureSet2[i] = sensor.pressure(0.1);
         depthSet2[i] = sensor.depth() + 0.42;
-        lastsec++;  
-        if (i >= pauseTime)//at the botton
+        updateSensor();
+        if (pressureSet2[i] >= pressureSet2[i-1])//when it reaches the bottom, which pressure remains the same. 
         {
-          if (!paused)//engine stopped at the bottob. Added bool 'paused' to prevent from looping
+          if (!paused)//add boolean paused prvent from looping. Pause at the bottom.
           {
-          pauseTime = round(millis()/1000);
-          stop();
-          paused = true;
+            pauseTime = i;
+            stop();
+            paused = true;
+            Serial.println(" Paused:" + paused);
           }
-          else if ((i - pauseTime) >= 46 && !rised)//rise after pausing for 45 seconds. Added bool 'rised' to prevent from looping.
+          if ((i-pauseTime) >= 45 && !rised)//rise after 45s.
           {
             rise();
             rised = true;
-            state = 5; 
-          }
-          else if (i == Time)//engine stopped when i == recorded Time in the first time
-          {
-            stop();
-            state = 6;
-          }
-        }  
-      }  
+            state = 5;
+            if (depthSet2[i] <= 0.42)//reaches the surface.
+            {
+              stop();
+              Serial.println(" Rised:" + rised);
+              Time = i;
+              state = 6;
+            }
+          } 
+        }
+      }
     }
-  }
+  }  
 }
 
 
@@ -267,26 +274,32 @@ void profile()
 
 void dive()
 {
-  Serial.println("Diving...");
-  engine.turn(-255);
-  leds[0] = CRGB::Red;
-  leds[1] = CRGB::Red;
-  leds[2] = CRGB::Red;
-  FastLED.show();
-  delay(10000);//  delay(10000);
-  engine.off();//  engine.off();
+    Serial.println("Diving...");
+    unsigned long diveStart = millis();
+    while (millis() - diveStart < 10000) // Simulate 10 seconds of diving
+    {
+        engine.turn(-500);
+        leds[0] = CRGB::Red;
+        leds[1] = CRGB::Red;
+        leds[2] = CRGB::Red;
+        FastLED.show();
+    }
+    engine.off();
 }
 
 void rise()
 {
-  Serial.println("Rising...");
-  engine.turn(255);
-  leds[0] = CRGB::Green;
-  leds[1] = CRGB::Green;
-  leds[2] = CRGB::Green;
-  FastLED.show();
-  delay(10500);// delay(10500);
-  engine.off();// engine.off();
+    Serial.println("Diving...");
+    unsigned long riseStart = millis();
+    while (millis() - riseStart < 10000) // Simulate 10 seconds of diving
+    {
+        engine.turn(500);
+        leds[0] = CRGB::Red;
+        leds[1] = CRGB::Red;
+        leds[2] = CRGB::Red;
+        FastLED.show();
+    }
+    engine.off();
 }
 
 void stop()
