@@ -19,8 +19,8 @@ int Time = 0;
 #define DATA_PIN 21 //port
 CRGB leds[NUM_LEDS]; // array of LEDs
 int lastsec = 0; //previous recorded time
-int pauseTime = 0;
 int i = 0;
+int pauseTime = 0;
 
 void setup()
 {
@@ -184,8 +184,8 @@ void profile()
     state = 1;
     if (state == 1)
     {
-      dive();
       startTime = millis();
+      dive();
       bool paused = false;
       bool rised = false;
       for (i = 0; state < 3; i = ((millis()-startTime)/1000))
@@ -196,11 +196,11 @@ void profile()
           pressureSet1[i] = sensor.pressure(0.1);
           depthSet1[i] = sensor.depth() + 0.42;
           lastsec++; 
-          if (pressureSet1[i] >= pressureSet1[i-1]+0.1)
+          if (pressureSet1[i] >= pressureSet1[i-1]+0.075)
           {
             if (!paused)
             {
-            pauseTime = millis()/1000;
+            pauseTime = round(millis()/1000);
             stop();
             paused = true;
             }
@@ -224,11 +224,11 @@ void profile()
   else if (state == 4)
   {
     Serial.println("Profile2...");
-    dive();
     startTime = millis();
-    int pauseTime = 0;
+    dive();
     bool paused = false;
     bool rised = false;
+    lastsec = 0;
     for (i = 0; i < Time; i = ((millis()-startTime)/1000))//i = time(second) in profiling.
     {
       if (i == lastsec+1)//updateSensor and record data per second.
@@ -237,11 +237,11 @@ void profile()
         pressureSet2[i] = sensor.pressure(0.1);
         depthSet2[i] = sensor.depth() + 0.42;
         lastsec++;  
-        if (pressureSet1[i] >= pressureSet2[i-1]-0.1)//at the botton
+        if (i >= pauseTime)//at the botton
         {
           if (!paused)//engine stopped at the bottob. Added bool 'paused' to prevent from looping
           {
-          pauseTime = millis()/1000;
+          pauseTime = round(millis()/1000);
           stop();
           paused = true;
           }
