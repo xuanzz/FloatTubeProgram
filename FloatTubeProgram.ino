@@ -276,30 +276,30 @@ void dive()
 {
     Serial.println("Diving...");
     unsigned long diveStart = millis();
-    while (millis() - diveStart < 10000) // Simulate 10 seconds of diving
-    {
-        engine.turn(-500);
-        leds[0] = CRGB::Red;
-        leds[1] = CRGB::Red;
-        leds[2] = CRGB::Red;
-        FastLED.show();
-    }
-    engine.off();
+    engine.turn(-500);
+    leds[0] = CRGB::Red;
+    leds[1] = CRGB::Red;
+    leds[2] = CRGB::Red;
+    FastLED.show();
+    if ((millis()-diveStart) == 10000)
+     {
+       engine.off();
+     }
 }
 
 void rise()
 {
     Serial.println("Diving...");
     unsigned long riseStart = millis();
-    while (millis() - riseStart < 10000) // Simulate 10 seconds of diving
-    {
-        engine.turn(500);
-        leds[0] = CRGB::Red;
-        leds[1] = CRGB::Red;
-        leds[2] = CRGB::Red;
-        FastLED.show();
-    }
-    engine.off();
+    engine.turn(500);
+    leds[0] = CRGB::Red;
+    leds[1] = CRGB::Red;
+    leds[2] = CRGB::Red;
+    FastLED.show();
+    if ((millis()-riseStart) == 10000)
+     {
+       engine.off();
+     }
 }
 
 void stop()
