@@ -195,7 +195,7 @@ void profile()
           pressureSet1[i] = sensor.pressure(0.1);
           depthSet1[i] = sensor.depth() + 0.42;
           updateSensor();
-          if (pressureSet1[i] >= pressureSet1[i-1])
+          if (pressureSet1[i] == pressureSet1[i-1])
           {
             Serial.println(i - pauseTime);
             if (!paused)
@@ -241,7 +241,7 @@ void profile()
         pressureSet2[i] = sensor.pressure(0.1);
         depthSet2[i] = sensor.depth() + 0.42;
         updateSensor();
-        if (pressureSet2[i] >= pressureSet2[i-1])//when it reaches the bottom, which pressure remains the same. 
+        if (pressureSet2[i] == pressureSet2[i-1])//when it reaches the bottom, which pressure remains the same. 
         {
           if (!paused)//add boolean paused prvent from looping. Pause at the bottom.
           {
