@@ -221,6 +221,10 @@ void profile()
             } 
           }
         }
+       if (i >=120)
+       {
+         rise();
+       }
       }
     }  
   }
@@ -265,6 +269,8 @@ void profile()
           } 
         }
       }
+    if (i >= 120)
+       rise();
     }
   }  
 }
