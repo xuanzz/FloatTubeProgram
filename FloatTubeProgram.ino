@@ -1,4 +1,4 @@
-1#include <Wire.h>
+#include <Wire.h>
 #include "MS5837.h"
 #include <ONE-Shield.h>
 #include <FastLED.h>
@@ -14,7 +14,7 @@ float depthSet1[100];
 float depthSet2[100];
 int previousPressure = 0;
 int PressureDifference = 0;
-int Time = 0;
+int Time;
 #define NUM_LEDS 3 // number of LEDs
 #define DATA_PIN 21 //port
 CRGB leds[NUM_LEDS]; // array of LEDs
