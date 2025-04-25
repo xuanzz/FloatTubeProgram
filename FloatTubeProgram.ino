@@ -1,4 +1,4 @@
-#include <Wire.h>
+1#include <Wire.h>
 #include "MS5837.h"
 #include <ONE-Shield.h>
 #include <FastLED.h>
@@ -136,7 +136,7 @@ void updateStatus()
     leds[2] = CRGB::Yellow;
     FastLED.show();
     // 1st idle
-    Serial.println(teamNumber + " 1st Dive Completed! Send 'a' to request the 1st data...");
+    Serial.println(teamNumber + " 1st Dive Completed! Send 'a' to request the 1st data... press 'p' to profile...");
     delay(3000);
     break;
   case 4:
@@ -211,7 +211,7 @@ void profile()
               rise();
               rised = true;
               state = 2;
-              if (depthSet1[i] <= 0.42)
+              if (depthSet1[i] <= 0.1)
               {
                 stop();
                 Serial.println("rised:" + rised);
@@ -255,7 +255,7 @@ void profile()
             rise();
             rised = true;
             state = 5;
-            if (depthSet2[i] <= 0.42)//reaches the surface.
+            if (depthSet2[i] <= 0.1)//reaches the surface.
             {
               stop();
               Serial.println(" Rised:" + rised);
@@ -281,7 +281,7 @@ void dive()
     leds[1] = CRGB::Red;
     leds[2] = CRGB::Red;
     FastLED.show();
-    if ((millis()-diveStart) == 10000)
+    if ((millis()-diveStart) >= 10000)
      {
        engine.off();
      }
@@ -296,7 +296,7 @@ void rise()
     leds[1] = CRGB::Red;
     leds[2] = CRGB::Red;
     FastLED.show();
-    if ((millis()-riseStart) == 10000)
+    if ((millis()-riseStart) >= 10000)
      {
        engine.off();
      }
