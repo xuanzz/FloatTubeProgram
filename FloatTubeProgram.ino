@@ -185,9 +185,9 @@ void profile()
         updateSensor();
         pressureSet1[i] = sensor.pressure(0.1);
         depthSet1[i] = sensor.depth() + 0.42;
-        if (i == 4 || i == cycle / 2 + 3)
+        if (i == 4 || i == cycle / 2 + 4)
           stop(); // stop the engine at 10s
-        if (i == cycle / 2 - 1)
+        if (i == cycle / 2 )
         {
           rise();
           state = 2;
@@ -209,9 +209,9 @@ void profile()
         updateSensor();
         pressureSet2[i] = sensor.pressure(0.1);
         depthSet2[i] = sensor.depth() + 0.42;
-        if (i == 4 || i == cycle / 2 + 3)
+        if (i == 4 || i == cycle / 2 + 4)
           stop(); // stop the engine at 10s
-        if (i == cycle / 2 - 1)
+        if (i == cycle / 2 )
         {
           rise();
           state = 5;
