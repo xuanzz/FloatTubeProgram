@@ -189,12 +189,12 @@ void profile()
         updateSensor();
         pressureSet1[i] = sensor.pressure(0.1);
         depthSet1[i] = sensor.depth() + 0.42;
-        float currentDepth = sensor.depth() + 0.42
-        float error = currentDepth - TARGET_DEPTH
+        float currentDepth = sensor.depth() + 0.42;
+        float error = currentDepth - TARGET_DEPTH;
         if (error >= DEPTH_TOLERANCE)
-          stop()
-        float currentDepth = sensor.depth() + 0.42
-        float error = TARGET_DEPTH - currentDepth
+          stop();
+        currentDepth = sensor.depth() + 0.42;
+        error = TARGET_DEPTH - currentDepth;
         if (error > DEPTH_TOLERANCE)
         {
           dive()
@@ -202,11 +202,11 @@ void profile()
         }
         else if (error < -DEPTH_TOLERANCE)
         {
-          rise()
-          Serial1.println("Too deep, rising...")
+          rise();
+          Serial1.println("Too deep, rising...");
         }
         else
-          stop() 
+          stop();
         delay(5000);
       }
       state = 3;
