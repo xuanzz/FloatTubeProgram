@@ -197,7 +197,7 @@ void profile()
         error = TARGET_DEPTH - currentDepth;
         if (error > DEPTH_TOLERANCE)
         {
-          dive()
+          dive();
           Serial1.println("Too shallow, diving...");
         }
         else if (error < -DEPTH_TOLERANCE)
