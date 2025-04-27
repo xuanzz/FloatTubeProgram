@@ -7,7 +7,7 @@ MS5837 sensor;
 Motor engine(2);     // buoyancy engine
 int state = 0;       // 0 = idle, 1 = 1st diving, 2 = 1st rising, 3 = 1st idle, 4 = 2nd diving, 5 = 2nd risingg, 6 = 2nd idle
 float startTime = 0; // float start time
-String teamNumber = "R9";
+String teamNumber = "R5";
 int pressureSet1[100];
 int pressureSet2[100];
 float depthSet1[100];
