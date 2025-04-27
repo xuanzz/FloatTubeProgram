@@ -196,9 +196,15 @@ void profile()
         float currentDepth = sensor.depth() + 0.42
         float error = TARGET_DEPTH - currentDepth
         if (error > DEPTH_TOLERANCE)
+        {
           dive()
+          Serial1.println("Too shallow, diving...");
+        }
         else if (error < -DEPTH_TOLERANCE)
+        {
           rise()
+          Serial1.println("Too deep, rising...")
+        }
         else
           stop() 
         delay(5000);
